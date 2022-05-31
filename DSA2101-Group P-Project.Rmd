@@ -1,0 +1,384 @@
+---
+title: "DSA2101-Group P-Project"
+output:
+  html_document: default
+  word_document: default
+date: '2022-04-15'
+---
+## Project Title
+Name | Matriculation number\
+Yang Qiman | A0221549E\
+Dongmen Runze | A0219951X\
+Liao Dankai | A0221543R\
+Wang Jianing | A0211232A\
+Zhang Mengzhe | A0211220J\
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.align = "center")
+
+#Loading the required packges
+library(tidyverse)
+library(ggrepel)
+library(ggplot2)
+library(gridExtra)
+
+```
+
+```{r}
+###Read data
+volcano <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/volcano.csv')
+eruptions <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/eruptions.csv')
+events <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/events.csv')
+tree_rings <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/tree_rings.csv')
+sulfur <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-12/sulfur.csv')
+```
+# Introduction \
+This project seeks to quantitatively analyze volcano eruptions worldwide since 1883, primarily through exploring patterns. Volcano eruption is a detrimental natural disaster for human beings — one that is able to cause property damages, deaths, disruption to economic activities, and permanent habitats destruction. Thus, finding a pattern for volcano eruptions may be able to help people predict, prepare, and prevent the harmful impacts aforementioned. An eruption has many attributes such as its geographical location, volcano type, vei level which reflects the eruption intensity, etc. For this project's purposes, we aim to reveal two major patterns via data visualization, including the geographical distribution of different volcano types and a statistic of the top 10 countries that suffered from eruptions, and the influence of strong eruptions on global climate throughout time. 
+
+# Data Description \
+The data is from The Smithsonian Institution and Axios. These two institutes put together a plot of volcano eruptions since Krakatoa (after 1883) by elevation and volcano type. There are five data files including volcano.csv, eruptions.csv, events.csv, tree.csv, and sulfure.csv. The key descriptive data we used is as follows：
+
+volcano_number: Each volcano has its unique identification number, which allows us to join the eruption.csv to volcano.csv by the same volcano number. 
+
+country: this variable indicates the country where the volcano is located. 
+
+primary volcano type: there are 3 major types of volcano and this attribute claims the type of this particular volcano. 
+
+latitude and longitude: these two variables help us locate the volcano and eruptions on the world map, thus we can plot the different types of volcanos on the map. 
+
+vei: this variable indicates the intensity of the specific eruption, the larger the number is, the stronger the eruption would be. 
+
+eruption category: it tells us whether the eruption is confirmed. We only research the eruptions that are confirmed. 
+
+eruption_number: each volcano has its unique eruption number, which allows us to join the eruption.csv to event.csv by the same eruption number. 
+
+event_type: each eruption includes different events such as explosion and flames. We want to find all events of event “VEI” to find the exact years the ashes were ejected into the atmosphere
+
+europe_temp_index: Pages 2K temperature of Europe in Celcius relative to 1961 to 1990
+
+neem: sulfur detected in ng/g from NEEM - ice cores from Greenland, data collected from melting ice cores, data range was 500 to 705 CE
+
+wdc: sulfur detected in ng/g from WDC - ice cores from Antartica, data collected from melting ice cores, data range was 500 to 705 CE
+
+To prepare the data, we have done several data transformations, first we used is.na to discard the missing values, then we filtered out only the confirmed eruption. And for vei 
+index, since it is not clear enough for ordinary audiences, we have reclassify them as different levels as "Very Strong", "Strong" ...., "Non-explosive”. Then we noticed that year in most of the datasets are of doubles instead of integers, so we change them to integers and take average for the overlapping values to make the datasets to join with less loss of data.
+
+# Question 1: \
+What is the distribution of Eruption volcanoes by countries and their eruption conditions ?
+
+### Introduciton \
+
+Environmental catastrophes and their far-reaching social impacts has led to an increased awareness of the importance of natural hazards. Moreover, the increase of globalization with fast growing populations around the world has furthered this trend. Therefore, it is necessary to consider the potential impact of natural hazard in a global context. Volcanoes is a typical example of spatially localized hazard (Christopher Smalla, Terry Naumannb, 2001). According to Fournier d’Albe (1979), Volcanic Risk thus equals Hazard x Vulnerability x Value. The physical proximity of a population to the source of volcano is a fundamental component of the vulnerability. For this reason, the quantification of volcano source distribution relative to population is important. The analysis in this question is to provide a quantitative distribution of volcano eruptions and effects measured by erupting conditions. The data used in this analysis are the latitude and longitude of the volcanoes, the region and country every volcano located in, population with in 100 km of each volcano the vei and category of every eruptions, and the time of eruption events (year). \
+
+### Methodology \
+
+Figure 1 shows the distribution of confirmed erupting volcanoes distributions in a worldwide scale. Every confirmed erupted volcano is plotted as a dot on a world map. Their positions are identified by the latitude and longitude data from the dataset. VEI, standing for Volcanic Explosivity Index, is an estimate of the scale or 'magnitude' of each eruption, each level of VEI represents different volumes of ejecta, column height, and some other criteria (Christopher G. Newhall,Stephen Self, 1982). In this analysis, the explosive intensity is divide into 5 levels: non explosive (vei = 0), small (vei = 1), moderate (vei = 2, vei = 3), large (vei = 4), and very large (vei > 4). The explosive intensities are represented by different colors of the dots while the affected population by volcano eruption within 100 km from the eruption source is represented by the size of the dots.\
+\
+Figure 2 zooms the volcano eruptions to some specific countries. Figure 2 shows the top 10 Countries with the Most Confirmed Eruption volcanoes since Krakatoa (after 1883) with a barplot. For each country, the color represents the explosive intensity. Below the general plot, there are two subplot of the general plot, which are created by group by explosive intensity and volcano type respectively. The reasons we group the data with another two variables are: firstly, we want to explore among the 10 most affected by volcanoes countries, how the level of explosive intensity distributes. Secondly, according to volcano wikipedia, active volcanoes are mainly fall on one of Stratovolcanoes, Shields, Caldera, Complex volcano types, in this case, we also want to explore how ratio of this four kinds of volcano types to the total of 21 kinds of volcano types in this dataset, and we label the volcano types except this four as "Others".
+
+### Visualizations \
+
+***Figure 1.1***
+```{r,warning=FALSE}
+###Preprocess the dataset and classify the vei to different levels
+eruptions_filter = eruptions %>%
+                    filter(!is.na(vei)&!is.na(longitude)&!is.na(latitude)&!is.na(volcano_number)&eruption_category == "Confirmed Eruption") %>%
+                    mutate(scales = case_when(
+                      vei ==  0 ~ "non explosive",
+                      vei == 1 ~ "small",
+                      vei == 2 | vei == 3 ~ "moderate",
+                      vei == 4 ~ "large",
+                      TRUE ~ "very large"
+                      )) 
+
+#rescale the scales level
+eruptions_filter$scales <- factor(eruptions_filter$scales, levels=c("very large","large","moderate","small","non explosive"))
+
+volcano_process = volcano %>%
+                    filter(!is.na(country)&!is.na(region)&!is.na(volcano_number)&!is.na(population_within_100_km))
+### Preprocess ends
+
+#Join the two tables
+erup_join_vol = eruptions_filter %>%
+  inner_join(volcano_process,by = "volcano_number")
+
+#Vectors that used to manually set color
+fillcolors = c("darkred","red","orange","yellow","lightyellow")
+
+### world map base，the map data is under ggplot - world map
+world <- map_data("world")
+
+##########world map scatter plot
+plot.world = ggplot() +
+  geom_map(
+    data = world, map = world,
+    aes(long, lat, map_id = region),
+    color = "white", fill = "lightgray", size = 0.2
+  ) +
+  theme(panel.background = element_rect(fill = "white")) +
+  geom_point(aes(longitude.x, latitude.x,color=scales,size = population_within_100_km),position=position_jitter(h=0.1, w=0.1),data =erup_join_vol,shape = 19) +
+  scale_color_manual(name = "Explosive  Intensity Index",values = fillcolors)+
+  xlab("longitude") +
+  ylab("latitude") +
+  labs(title = "Confirmed Eruption volcanoes Around the World since Krakatoa (after 1883)",color = "white",size = "Population Affected by Eruptions",face = "bold") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+plot.world
+```
+
+***Figure 1.2***
+```{r,warning = FALSE}
+#filter out top 10 countries that have most volcanoes
+top_10 = erup_join_vol %>%
+  group_by(country) %>%
+  summarise(count = n()) %>%
+  top_n(10,count)%>%
+  select(country) %>%
+  pull(country)
+
+#Group by country
+erup_join_vol_country  = erup_join_vol %>%
+  group_by(country) %>%
+  mutate(count_volcano = n(),count = 1) %>%
+  ungroup()
+
+#Filter out country that satisfy the conditions
+filter_country = erup_join_vol_country %>%
+                  filter(country %in% top_10)
+
+
+filter_country = filter_country %>%
+  group_by(country,scales) %>%
+  mutate(label_sum = n()) %>%
+  ungroup()
+
+#######Plot top 10 countries that have the most volcanoes since Krakatoa (after 1883)
+
+#reclassify the primary volcano types, only inlcludes the primary three and label the left as others
+filter_country_withvolcanotype = filter_country %>%
+  mutate(primary_volcano_type = case_when(
+    primary_volcano_type == "Stratovolcano(es)" | primary_volcano_type== "Stratovolcano" ~ "Stratovolcano(es)",
+    primary_volcano_type == "Shield" | primary_volcano_type == "Shield(s)" ~ "Shield(s)",
+    primary_volcano_type == "Caldera" |  primary_volcano_type == "Caldera(s)" ~ "Caldera(s)",
+     primary_volcano_type == "Complex" ~ "Complex",
+    TRUE ~ "Others"
+  )
+         )
+
+#rescale the volcano type level
+filter_country_withvolcanotype$primary_volcano_type <- factor(filter_country_withvolcanotype$primary_volcano_type, levels=c("Stratovolcano(es)","Shield(s)","Caldera(s)","Complex","Others"))
+
+######plot top 10 countries that have the most volcanoes since Krakatoa (after 1883)
+plot.1883 = ggplot(filter_country,aes(x=reorder(country,count_volcano),y = count)) +
+  geom_col(aes(fill = scales),position = position_stack(reverse = TRUE)) +
+  scale_fill_manual(name = "Explosive Intensity Index",values = fillcolors) +
+  coord_flip()+
+  labs(title = "Top 10 Countries with Most Confirmed\nEruption volcanoes since Krakatoa\n(after 1883)",
+       x = "Country", y = "Number of Volcanoes")
+
+#####top 10 countries that have the most volcanoes since Krakatoa (after 1883) group by volcano type
+plot.1883_voltype=
+  ggplot(filter_country_withvolcanotype,aes(x=reorder(country,count_volcano),y = count)) +
+  geom_col(aes(fill = scales),position = position_stack(reverse = TRUE)) +
+  scale_fill_manual(name = "Explosive Intensity Index",values = fillcolors) +
+  facet_wrap(~ primary_volcano_type) + 
+  coord_flip()+
+  labs(title = "Top 10 Countries with Most Confirmed\nEruption Volcanoes Group by Volcano Types",
+       x = "Country", y = "Number of Volcanoes") +
+  theme(axis.title.y=element_blank(),title = element_text(size = 6), axis.text.x = element_text(angle=270, hjust=1),axis.text.y = element_text(size = 4.5),strip.text = element_text(size = 6))
+
+####top 10 countries that have the most volcanoes since Krakatoa (after 1883) group by scales
+plot.1883_scales = 
+  ggplot(filter_country_withvolcanotype,aes(x=reorder(country,count_volcano),y = count,fill = scales)) +
+  geom_col() +
+  scale_fill_manual(name = "Explosive Intensity Index",values = fillcolors) +
+  facet_wrap(~ scales) + 
+  coord_flip()+
+  labs(title = "Top 10 Countries with Most Confirmed\nEruption Volcanoes Group by Explosive scales",
+       x = "Country", y = "Number of Volcanoes") +  
+  theme(title = element_text(size = 6), legend.position="none",axis.text.x = element_text(angle=270, hjust=1),axis.text.y = element_text(size = 4.5))
+
+#stack the three plot into one image
+grid.arrange(plot.1883,grid.arrange(plot.1883_scales, plot.1883_voltype,ncol = 2, widths = c(1,1.4)),nrow = 2)
+```
+
+### Discussions\
+
+From Figure 1, a conclusion can be drawn that most of the volcanoes are distributed in the continental plate junctions. Some island countries located in these positions are critically affected by volcano eruptions, such as Indonesia and Japan. Furthermore, the figure also shows that the countries with a large population near the erupting volcanoes are mostly developed countries, as their domestic economies are affected by natural hazards.\
+\
+While Figure 2 has shown us the 10 most affected by volcano eruption countries around the world, we can tell by combining Figure 1 and Figure 2, that most of these top 10 countries locate on islands or on tectonic boundaries. Also, among all volcano eruptions, we can see from the corner-left subplot, most volcano eruptions range from small to moderate, and few of them can rank as large or even very large, but these kinds of rare intensive eruptions usually will have more affected population. From the corner-right subplot, we can see that Stratovolcanoes have the highest ratio among all the volcano types, and we can verify that the listed four kinds of volcano types account for most of the volcano eruption, while the rest only cause a very small proportion of eruptions. 
+
+### References \
+
+Christopher Small & Terry Naumann (2001) The global distribution of human population and recent volcanism, *Global Environmental Change Part B:  Environmental Hazards*, 3:3, 93-109, DOI: 10.3763/ehaz.2001.0309 \
+\
+Fournier d'Albe, E. M. 1979. Objectives of volcanic monitoring and prediction. *Journal of the Geological Society of London*, 136: 321–326. \
+\
+Newhall, C. G., & Self, S. (1982). The volcanic explosivity index (VEI) an estimate of explosive magnitude for historical volcanism. *Journal of Geophysical Research: Oceans*, 87(C2), 1231-1238. \
+\
+Global Volcanism Program, 2013. Volcanoes of the World, v. 4.10.6 (24 Mar 2022). Venzke, E (ed.). Smithsonian Institution. Downloaded 16 Apr 2022. https://doi.org/10.5479/si.GVP.VOTW4-2013.\
+\
+Wikipedia contributors. (2022, April 12). Volcano. In Wikipedia, The Free Encyclopedia. Retrieved 15:09, April 16, 2022, from https://en.wikipedia.org/w/index.php?title=Volcano&oldid=1082293495/
+\
+
+# Question 2:\
+What is the relationship among the number and magnitude of the eruptions, amount of sulfur detected in the atmosphere, and the temperature?
+
+### Introduction\
+
+According to the article, volcano eruptions inject sulfate and ash into the atmosphere, and after major eruptions in the history, summer temperature dropped afterwards, so we are interested in if there's an obvious relationship among volcano eruption, amount of sulfur in the atmosphere, and the temperature. To answer the question, we need dataset tree_rings(year and europe_temp_index), sulfur, events(event_date_year and event_type), and eruptions(vei). 
+
+### Methodology\
+
+The following question consists of two figures.
+
+The first figure is consist of 4 subplots
+
+SubPlot1 (top left corner):
+The x-axis is time, from 0 to 2020; the y-axis is the number of eruptions; the different colors in the bars represent to the different levels of magnitudes of the eruption according to VEI(volcano explosivity index), where the darker the color, the larger the magnitude. It directly shows the numbers of eruptions in different levels each year.
+
+SubPlot2 (top right corner):
+The part of subplot1 with x-limit from 500 to 723.
+
+SubPlot3 (bottom left corner): 
+The x-axis is year, from 0 to 2020; there are 2 y-axis, the right one is Europe temperature index (blue line and blue axis), the right one is the amount of approximate total tephra injected from volcano eruptions that year (calculated from VEI) (black axis and black area). Putting the two graphs together gives us a more direct view of the relationship between the amount of tephra and the temperature.
+The area graph is a further interpretation of plot2 by giving each level of VEI a weight to show the total amount of tephra from eruptions of all levels,which  has a more direct relationship with the temperature(the blue line).
+
+SubPlot4 (bottom right corner):
+The x-axis is time, from 500 to 706; there are 2 y-axis, the right one is sulfure detected in the atmosphere(in ng/g) (the pink line is from NEEM, ice cores from Greenland, and the green line is from WDC, ice cores from Antartica), the left one is the amount of approximate total tephra injected from volcano eruptions that year (grey axis and grey area). 
+Same as plot2, the area graph shows a more direct relationship with the amount of sulfur(pink and green lines).
+
+The second figure is consisted of subplots 5 and 6.
+
+SubPlot5 & 6:
+The x axis is the amount of sulfur detected in the atmosphere and the y axis is Europe temperature index. In plot 5, the sulfur is detected from NEEM - ice cores from Greenland; and in plot6, the sulfur is detected from WDC - ice cores from Antartica.
+
+### Visualizations
+
+***figure 2.1***
+```{r,warning=FALSE}  
+#Process the dataset
+tree_rings1=tree_rings%>%
+  filter(is.na(year)==FALSE)%>%
+  mutate_at(vars(year),as.integer)
+sulfur1=sulfur%>%
+  filter(is.na(year)==FALSE)%>%
+  gather(neem:wdc,key=region,value=sulfur_detected)%>%
+  mutate_at(vars(year),as.integer)%>%
+  group_by(year,region)%>%
+  summarize(sulfur_ave=mean(sulfur_detected))
+
+factorize0=function(x){
+  result="very large"
+  temp=as.integer(x)
+  if(temp==0) result="non explosive"
+  else if(temp==1) result="small"
+  else if(temp==2|x==3) result="moderate"
+  else if(temp==4) result="large"
+  factor(result)
+}
+
+vei_events=events%>%
+  left_join(eruptions,by="eruption_number")%>%
+  filter(event_type=="VEI (Explosivity Index)")%>%
+  mutate_at(vars(event_date_year),as.integer)%>%
+  filter(is.na(vei)==FALSE)%>%
+  mutate(vei_fac=sapply(vei,factorize0))
+
+#Plot the amount and magnitude of eruptions across time
+p2=ggplot(data=vei_events,aes(x=event_date_year))+
+  geom_histogram(aes(fill=factor(vei_fac,
+                                         levels=c("non explosive","small","moderate","large","very large"))))+
+  scale_fill_manual(values=c("very large"="darkred","large"="red","moderate"="orange","small"="yellow","non explosive"="lightyellow"),name="Volcanic Explosivity Index")+
+  labs(x="year",y="number of eruptions",title="Number of Volcano Eruptions Each Year \n\ (from 0 to 2020)")+
+  theme(legend.position = "none",
+        plot.title=element_text(size=9),
+        axis.title=element_text(size=9))+
+  xlim(0,2020)
+p4=p2+
+  xlim(500,706)+
+  theme(legend.position="left",
+        plot.title=element_text(size=9),
+        legend.text=element_text(size=9),
+        legend.title=element_text(size=9),
+        axis.title=element_text(size=9))+
+  labs(title="Number of Volcano \n\ Eruptions Each Year \n\ (from 500 to 706)")
+
+#Quantify the magnitudes of volcano eruptions by VEI
+tephra=c(0.00001/2,0.001,0.01,0.1,1,10,100,1000)
+tep=vei_events%>%
+  mutate(vol_tephra=tephra[as.integer(vei)+1])%>%
+  group_by(event_date_year)%>%
+  summarize(sum_tephra=sum(vol_tephra))
+
+#Plot the tempreture in Europe across time
+p1=ggplot()+
+  geom_area(aes(x=event_date_year,y=sum_tephra),data=tep,col="black")+
+  geom_line(aes(x=year,y=europe_temp_index*50),data=tree_rings1,col="blue",alpha=0.5)+
+  xlim(0,2020)+
+  labs(x="year",y="approximate total tephra(in km^3)",title="Temperature in Europe")+
+  scale_y_continuous(sec.axis=sec_axis(~.*0.02,name="europe_temp_index"))+
+  theme(axis.text.y.right=element_text(color="blue"),
+        axis.title.y.right=element_text(color="blue"),
+        plot.title=element_text(size=9),
+        axis.title=element_text(size=9))
+#Plot the amount of sulfur detected in atmosphere across time
+p3=ggplot()+
+  geom_area(aes(x=event_date_year,y=sum_tephra),data=tep,fill="darkgrey")+
+  geom_line(aes(x=year,y=sulfur_ave,col=region),data=sulfur1,alpha=0.8)+
+  xlim(500,706)+
+  labs(x="year",y="approximate total tephra(in km^3)",title="Amount of Sulfur in the Atmosphere")+
+  scale_y_continuous(sec.axis=sec_axis(~.*1,name="sulfur_detected(in ng/g)"))+
+  theme(axis.text.y.left=element_text(color="darkgrey"),
+        axis.title.y.left=element_text(color="darkgrey"),
+        legend.position="left",
+        plot.title=element_text(size=9),
+        axis.title=element_text(size=9))
+
+figure1=grid.arrange(p2,p4,p1,p3,ncol=2,widths = c(1,1.6))
+```
+
+***figure 2.2***
+```{r}
+
+#Join the data of eruptions with the data of temperature and sulfur
+df=tep%>%
+  inner_join(by=c("event_date_year"="year"),tree_rings1)%>%
+  inner_join(by=c("event_date_year"="year"),sulfur1)
+
+
+  
+  
+#Plot temperature in Europe against the amount of sulfur detected in Greenland and Antartica
+df1=df%>%filter(region=="neem")
+p5=ggplot(data=df1,aes(x=sulfur_ave,y=europe_temp_index))+
+  geom_point()+
+  geom_smooth()+
+  labs(y="Europe Temperature Index",x="Average amount of sulfur")+
+  ggtitle("NEEM(Greenland)")
+df2=df%>%filter(region=="wdc")
+p6=ggplot(data=df2,aes(x=sulfur_ave,y=europe_temp_index))+
+  geom_point()+
+  geom_smooth()+
+  labs(y="Europe Temperature Index",x="Average amount of sulfur")+
+  ggtitle("WDC(Antartica)")
+
+figure2=grid.arrange(p5,p6,ncol=2,widths = c(1,1))
+```
+
+### Discussions\
+
+Trends:\
+(1)figure1: when there's a rise in high-level eruptions (more clearly interpreted as a rise in the approximate total tephra since mathematically the tephra is a weighted sum of the number of eruptions), there tends to be a drop in Europe temperature index a little afterwards.\
+(2)figure2: when there's a rise in high-level eruptions (a rise in the approximate total tephra), there tends to be a rise in the amount of sulfur detected in the atmosphere from both NEEM and WDC.\
+
+Speculations:\
+(1)When there's a rise in high-level eruptions, a lot of tephra may be injected into the atmosphere, and thus, block the sunlight for a period of time. This means, a little after the rise, the temperature would drop. Also, the tephra injected by volcano eruptions contains sulfur, so when more tephra is injected, the amount of sulfur in the atmosphere may have increased. \
+(2)The amount of sulfur detected in the atmosphere might have a negative influence on the temperature. The sulfur, primarily in the form of sulfur dioxide, may combine with water in the atmosphere to form droplets of sulfuric acid which absorbs heat from the earth and further obscures the sun, thus, lowering the temperature.\
+
+ 
+### References \
+
+Schoenwiese, C. D. (1987). Volcanoes influence climate. *Geowiss. Unserer Zeit;(Germany, Federal Republic of)*, 5(2).\
+\
+Pyle, D. M. (2015). Sizes of volcanic eruptions. *In The encyclopedia of volcanoes* (pp. 257-264). Academic Press.\
